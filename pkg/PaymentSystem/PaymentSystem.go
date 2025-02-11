@@ -51,6 +51,8 @@ func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) (*Ac
 		Status:  status,
 	}
 	ps.accounts[iban] = newAccount
+
+	fmt.Printf("Account %s created\n", iban)
 	return newAccount, nil
 }
 
@@ -84,6 +86,8 @@ func (ps *PaymentSystem) Transfer(sender, recipient string, amount float64) erro
 
 	s.Balance -= amount
 	r.Balance += amount
+
+	fmt.Printf("Transfer for %f %s from %s to %s complited\n", amount, s.Currency, s.IBAN, r.IBAN)
 	return nil
 }
 
@@ -100,6 +104,8 @@ func (ps *PaymentSystem) Emition(currency string, amount float64) error {
 	}
 
 	account.Balance += amount
+
+	fmt.Printf("Emition for %f %s complited\n", amount, currency)
 	return nil
 }
 
@@ -110,10 +116,22 @@ func (ps *PaymentSystem) Withdrowal(sender string, amount float64) error {
 
 }
 
-// New() создает экземпляр объекта PaymentSystem,
+// New()
+// 1. Создает экземпляр объекта PaymentSystem
+// 2. Создает счета для эмисии денежных средств (для всех доступных валют)
+// 3. Создает счета для вывода денежных средств из обращения (для всех доступных валют)
 func New() *PaymentSystem {
-	return &PaymentSystem{
+
+	ps := &PaymentSystem{
 		accounts: make(map[string]*Account),
 	}
+	for c, a := range EmissionAccounts {
+		ps.CreateAccount(a, "EMITION", c, "active")
+	}
 
+	for c, a := range WithdrawalAccounts {
+		ps.CreateAccount(a, "WITHDROWAL", c, "active")
+	}
+
+	return ps
 }
