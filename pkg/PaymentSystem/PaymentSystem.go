@@ -6,19 +6,27 @@ import (
 	"github.com/google/uuid"
 )
 
-const emissionAccount = "BY13NBRB3600900000002Z00AB00"
-const withdrawalAccount = "BY13NBRB3600900000002Z00AB01"
+var EmissionAccounts = map[string]string{
+	"BYN": "BY13NBRB3600900000002Z00AB00",
+	"USD": "BY13NBRB3600900000002Z00AB01",
+}
+
+var WithdrawalAccounts = map[string]string{
+	"BYN": "BY13NBRB3600900000002Z00AB10",
+	"USD": "BY13NBRB3600900000002Z00AB11",
+}
 
 type Subject struct {
-	ID   uuid.UUID
-	Name string
+	ID   uuid.UUID `json:"uuid"`
+	Name string    `json:"name"`
 }
 
 type Account struct {
-	IBAN    string  `json:"iban"`
-	Owner   Subject `json:"owner"`
-	Balance float64 `json:"balance"`
-	Status  string  `json:"status"`
+	IBAN     string  `json:"iban"`
+	Currency string  `json:"currency"`
+	Owner    Subject `json:"owner"`
+	Balance  float64 `json:"balance"`
+	Status   string  `json:"status"`
 }
 
 type PaymentSystem struct {
@@ -26,14 +34,15 @@ type PaymentSystem struct {
 }
 
 // CreateAccount() создает новый счет с указанным IBAN, именем владельца и статусом
-func (ps *PaymentSystem) CreateAccount(iban, name, status string) (*Account, error) {
+func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) (*Account, error) {
 
 	if _, exists := ps.accounts[iban]; exists {
-		return nil, fmt.Errorf("IBAN exists")
+		return nil, fmt.Errorf("IBAN already exists")
 	}
 
 	newAccount := &Account{
-		IBAN: iban,
+		IBAN:     iban,
+		Currency: currency,
 		Owner: Subject{
 			ID:   uuid.New(),
 			Name: name,
@@ -45,43 +54,66 @@ func (ps *PaymentSystem) CreateAccount(iban, name, status string) (*Account, err
 	return newAccount, nil
 }
 
-func (ps *PaymentSystem) emition(amount float64) error {
+// Transfer() перевод между счетами
+func (ps *PaymentSystem) Transfer(sender, recipient string, amount float64) error {
+	s, exists := ps.accounts[sender]
+	if !exists {
+		return fmt.Errorf("sender's account is not exist")
+	}
 
-	account := ps.accounts[emissionAccount]
+	if s.Status != "active" {
+		return fmt.Errorf("sender's account is not active")
+	}
+
+	r, exists := ps.accounts[recipient]
+	if !exists {
+		return fmt.Errorf("recipient's account is not exist")
+	}
+
+	if r.Status != "active" {
+		return fmt.Errorf("recipient's account is not active")
+	}
+
+	if r.Currency != s.Currency {
+		return fmt.Errorf("currency mismatch")
+	}
+
+	if s.Balance < amount {
+		return fmt.Errorf("insufficient funds in the account %s", sender)
+	}
+
+	s.Balance -= amount
+	r.Balance += amount
+	return nil
+}
+
+// Emition() эмиссия денежных средств в указанной валюте
+func (ps *PaymentSystem) Emition(currency string, amount float64) error {
+
+	account, exists := ps.accounts[EmissionAccounts[currency]]
+	if !exists {
+		return fmt.Errorf("%s emition account is not exist", currency)
+	}
+
 	if account.Status != "active" {
-		return fmt.Errorf("account is not active!")
+		return fmt.Errorf("emition account is not active")
 	}
 
 	account.Balance += amount
 	return nil
 }
 
-func New(amount float64) *PaymentSystem {
-	ps := &PaymentSystem{
+// Withdrowal() вывод денежных средств из оборота с указанного счета в валюте источника
+func (ps *PaymentSystem) Withdrowal(sender string, amount float64) error {
+
+	return ps.Transfer(sender, WithdrawalAccounts[ps.accounts[sender].Currency], amount)
+
+}
+
+// New() создает экземпляр объекта PaymentSystem,
+func New() *PaymentSystem {
+	return &PaymentSystem{
 		accounts: make(map[string]*Account),
 	}
 
-	ps.CreateAccount(emissionAccount, "NBRB", "active")
-	ps.emition(amount)
-	// ps.accounts[emission] = &Account{
-	// 	IBAN: emission,
-	// 	Owner: Subject{
-	// 		ID:   uuid.New(),
-	// 		Name: "NBRB",
-	// 	},
-	// 	Balance: amount,
-	// 	Status:  "active",
-	// }
-	ps.CreateAccount(withdrawalAccount, "NBRB", "active")
-	// ps.accounts[withdrawal] = &Account{
-	// 	IBAN: withdrawal,
-	// 	Owner: Subject{
-	// 		ID:   uuid.New(),
-	// 		Name: "NBRB",
-	// 	},
-	// 	Balance: 0,
-	// 	Status:  "active",
-	// }
-
-	return ps
 }
