@@ -1,11 +1,11 @@
 # Payment_System
-Task Payment System
 
-$git clone ...
+```
+git clone ...
 
-$cd .\Payment_System\
+cd .\Payment_System\
 
-$go run .\cmd\main.go
+go run .\cmd\main.go
 
-$go test .\pkg\PaymentSystem\
-
+go test .\pkg\PaymentSystem\
+```
