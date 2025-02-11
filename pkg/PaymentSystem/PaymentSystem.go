@@ -1,6 +1,7 @@
 package PaymentSystem
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -29,15 +30,21 @@ type Account struct {
 	Status   string  `json:"status"`
 }
 
+type Payment struct {
+	Sender    string  `json:"sender"`
+	Recipient string  `json:"recipient"`
+	Amount    float64 `json:"amount"`
+}
+
 type PaymentSystem struct {
 	accounts map[string]*Account
 }
 
 // CreateAccount() создает новый счет с указанным IBAN, именем владельца и статусом
-func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) (*Account, error) {
+func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) error {
 
 	if _, exists := ps.accounts[iban]; exists {
-		return nil, fmt.Errorf("IBAN already exists")
+		return fmt.Errorf("IBAN already exists")
 	}
 
 	newAccount := &Account{
@@ -52,8 +59,8 @@ func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) (*Ac
 	}
 	ps.accounts[iban] = newAccount
 
-	fmt.Printf("Account %s created\n", iban)
-	return newAccount, nil
+	fmt.Printf("Account %s (%s) created\n", iban, name)
+	return nil
 }
 
 // Transfer() перевод между счетами
@@ -87,8 +94,20 @@ func (ps *PaymentSystem) Transfer(sender, recipient string, amount float64) erro
 	s.Balance -= amount
 	r.Balance += amount
 
-	fmt.Printf("Transfer for %f %s from %s to %s complited\n", amount, s.Currency, s.IBAN, r.IBAN)
+	fmt.Printf("Transfer for %.2f %s from %s (%s) to %s (%s) complited\n", amount, s.Currency, s.IBAN, s.Owner.Name, r.IBAN, r.Owner.Name)
 	return nil
+}
+
+// Payment() выполняет перевод денег через JSON-структуру.
+func (ps *PaymentSystem) Payment(data []byte) error {
+
+	var transfer Payment
+	err := json.Unmarshal(data, &transfer)
+	if err != nil {
+		return fmt.Errorf("parsing JSON error: %v", err)
+	}
+
+	return ps.Transfer(transfer.Sender, transfer.Recipient, transfer.Amount)
 }
 
 // Emition() эмиссия денежных средств в указанной валюте
@@ -105,7 +124,7 @@ func (ps *PaymentSystem) Emition(currency string, amount float64) error {
 
 	account.Balance += amount
 
-	fmt.Printf("Emition for %f %s complited\n", amount, currency)
+	fmt.Printf("Emition for %.2f %s complited\n", amount, currency)
 	return nil
 }
 
