@@ -5,12 +5,17 @@ import (
 	"payment_system/pkg/PaymentSystem"
 )
 
-
-//демонстрация работы пакета PaymentSystem
+// демонстрация работы пакета PaymentSystem
 func main() {
 
 	//Создаем плfтежную систему BelPay
 	BelPay := PaymentSystem.New()
+
+	//Эмиссионный счет в BYN
+	fmt.Println("Эмиссионный счет в BYN: ", PaymentSystem.EmitionAccount("BYN"))
+
+	// Счет для вывод денежных средств BYN из оборота
+	fmt.Println("Счет для вывод денежных средств BYN из оборота", PaymentSystem.WithdrowalAccount("BYN"))
 
 	//Эмиссия денежных средств - 1000 BYN
 	err := BelPay.Emition("BYN", 1000)
@@ -72,7 +77,16 @@ func main() {
 		fmt.Println("Ошибка вывода из оборота: ", err)
 	}
 
-	//Баланс счета после всех платежей
-	fmt.Println("Текущий баланс ", BelPay.Name("BY13NBRB3600900000002Z00AB22"), BelPay.Balance("BY13NBRB3600900000002Z00AB22"))
+	//Баланс счета "BY13NBRB3600900000002Z00AB22" после всех платежей
+	fmt.Println("Текущий баланс BY13NBRB3600900000002Z00AB22 ", BelPay.Name("BY13NBRB3600900000002Z00AB22"), BelPay.Balance("BY13NBRB3600900000002Z00AB22"))
+
+	//Список всех открытых счетов в системе
+	a, err := BelPay.List()
+	if err != nil {
+		fmt.Println("Ошибка генерации списка :", err)
+	} else {
+		fmt.Println("Список открытых счетов: ")
+		fmt.Println(string(a))
+	}
 
 }

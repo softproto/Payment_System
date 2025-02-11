@@ -147,8 +147,24 @@ func (ps *PaymentSystem) Name(iban string) string {
 	return ps.accounts[iban].Owner.Name
 }
 
+// List() выводит список всех счетов в формате JSON.
+func (ps *PaymentSystem) List() ([]byte, error) {
+	accountsList := make([]Account, 0, len(ps.accounts))
+	for _, account := range ps.accounts {
+		accountsList = append(accountsList, *account)
+	}
+
+	return json.MarshalIndent(accountsList, "", "  ")
+}
+
+// EmitionAccount() Эмиссионный счет для указанной валюты
 func EmitionAccount(currency string) string {
 	return EmissionAccounts[currency]
+}
+
+// EmitionAccount() Счет для вывод денежных средств из оборота для указанной валюты
+func WithdrowalAccount(currency string) string {
+	return WithdrawalAccounts[currency]
 }
 
 // New()
