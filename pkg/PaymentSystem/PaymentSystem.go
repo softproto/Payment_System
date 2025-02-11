@@ -59,7 +59,7 @@ func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) erro
 	}
 	ps.accounts[iban] = newAccount
 
-	fmt.Printf("Account %s (%s) created\n", iban, name)
+	fmt.Printf("Account %s (%s %s) created\n", iban, name, currency)
 	return nil
 }
 
@@ -67,7 +67,7 @@ func (ps *PaymentSystem) CreateAccount(iban, name, currency, status string) erro
 func (ps *PaymentSystem) Transfer(sender, recipient string, amount float64) error {
 	s, exists := ps.accounts[sender]
 	if !exists {
-		return fmt.Errorf("sender's account is not exist")
+		return fmt.Errorf("sender's account does not exist")
 	}
 
 	if s.Status != "active" {
@@ -76,7 +76,7 @@ func (ps *PaymentSystem) Transfer(sender, recipient string, amount float64) erro
 
 	r, exists := ps.accounts[recipient]
 	if !exists {
-		return fmt.Errorf("recipient's account is not exist")
+		return fmt.Errorf("recipient's account does not exist")
 	}
 
 	if r.Status != "active" {
@@ -115,7 +115,7 @@ func (ps *PaymentSystem) Emition(currency string, amount float64) error {
 
 	account, exists := ps.accounts[EmissionAccounts[currency]]
 	if !exists {
-		return fmt.Errorf("%s emition account is not exist", currency)
+		return fmt.Errorf("%s emition account does not exist", currency)
 	}
 
 	if account.Status != "active" {
@@ -130,9 +130,25 @@ func (ps *PaymentSystem) Emition(currency string, amount float64) error {
 
 // Withdrowal() вывод денежных средств из оборота с указанного счета в валюте источника
 func (ps *PaymentSystem) Withdrowal(sender string, amount float64) error {
-
+	fmt.Print("Start Withdrowal ... ")
 	return ps.Transfer(sender, WithdrawalAccounts[ps.accounts[sender].Currency], amount)
 
+}
+
+// Balance() возвращает баланс счета
+func (ps *PaymentSystem) Balance(iban string) float64 {
+
+	return ps.accounts[iban].Balance
+}
+
+// Name() возвращает имя владельца счета
+func (ps *PaymentSystem) Name(iban string) string {
+
+	return ps.accounts[iban].Owner.Name
+}
+
+func EmitionAccount(currency string) string {
+	return EmissionAccounts[currency]
 }
 
 // New()

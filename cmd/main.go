@@ -5,17 +5,20 @@ import (
 	"payment_system/pkg/PaymentSystem"
 )
 
+
+//демонстрация работы пакета PaymentSystem
 func main() {
 
-	//Создаем плтежную систему BelPay
+	//Создаем плfтежную систему BelPay
 	BelPay := PaymentSystem.New()
-	//Эмиссия денежных средств. 1000 BYN
+
+	//Эмиссия денежных средств - 1000 BYN
 	err := BelPay.Emition("BYN", 1000)
 	if err != nil {
 		fmt.Println("Ошибка эмиссии: ", err)
 	}
 
-	//Эмиссия денежных средств. 1000 USD
+	//Эмиссия денежных средств - 1000 USD
 	err = BelPay.Emition("USD", 1000)
 	if err != nil {
 		fmt.Println("Ошибка эмиссии: ", err)
@@ -58,10 +61,18 @@ func main() {
 	}
 
 	//"MAZ" совершает платеж в пользу "EPAM" 40 BYN (данные передаются в json формате)
-	j := []byte(`{"sender":"BY13NBRB3600900000002Z00AB22", "recipient":"BY13NBRB3600900000002Z00AB44", "amount":40}`)
+	j := []byte(`{"sender":"BY13NBRB3600900000002Z00AB22", "recipient":"BY13NBRB3600900000002Z00AB44", "amount":20}`)
 	err = BelPay.Payment(j)
 	if err != nil {
 		fmt.Println("Ошибка оплаты:", err)
 	}
+
+	err = BelPay.Withdrowal("BY13NBRB3600900000002Z00AB22", 30)
+	if err != nil {
+		fmt.Println("Ошибка вывода из оборота: ", err)
+	}
+
+	//Баланс счета после всех платежей
+	fmt.Println("Текущий баланс ", BelPay.Name("BY13NBRB3600900000002Z00AB22"), BelPay.Balance("BY13NBRB3600900000002Z00AB22"))
 
 }
