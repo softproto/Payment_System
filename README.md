@@ -1,2 +1,2 @@
-# Task_Payment_System
+# Payment_System
 Task Payment System
